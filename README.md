@@ -1,4 +1,6 @@
-## This is the arduino code and the ruby code to interface to stagger, in order to give ambient data about the environment
+## EmergencyStripper
+
+This is the arduino code and the ruby code to interface to stagger, in order to give ambient data about the environment
 
 ## Features
 
