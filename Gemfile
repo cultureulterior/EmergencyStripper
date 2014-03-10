@@ -1,0 +1,5 @@
+source 'https://rubygems.org'
+gem 'serialport'
+gem 'em-zeromq'
+gem 'msgpack'
+gem 'color'
