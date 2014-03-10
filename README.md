@@ -1,6 +1,6 @@
 ## EmergencyStripper
 
-This is the arduino code and the ruby code to interface to stagger, in order to give ambient data about the environment
+This repository contains arduino code and ruby code to interface to the stagger http endpoint, in order to give ambient data about the environment
 
 ## Features
 
@@ -17,3 +17,7 @@ This is the arduino code and the ruby code to interface to stagger, in order to 
 
 - bundle install
 - ruby emergency_stripper_interface.rb http://<http endpoint> /dev/tty.usbmodemfd131
+
+## Example:
+
+![Image](../blob/master/example.gif?raw=true)
