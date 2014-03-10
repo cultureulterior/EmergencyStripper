@@ -10,7 +10,7 @@ require 'color'
 Green = Color::RGB.by_hex("00FF00").to_hsl
 Red = Color::RGB.by_hex("FF0000").to_hsl
 def connect()
-  $sp = SerialPort.new("/dev/tty.usbmodem1421", 115200, 8, 1, SerialPort::NONE)
+  $sp = SerialPort.new(ARGV[1], 115200, 8, 1, SerialPort::NONE)
   puts "Connecting to serial port"
 end
 connect()
