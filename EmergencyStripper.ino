@@ -16,10 +16,16 @@ PololuLedStrip<12> ledStrip;
 #define LED_COUNT 60
 rgb_color colors[LED_COUNT];
 rgb_color current_color;
+rgb_color recieved_color;
+unsigned char recieved_checksum;
+unsigned char calculated_checksum;
+int message_length = 4;
+unsigned long last_correct = 0;
+unsigned long time = 0;
 
 void setup()
 {
-  Serial.begin(115200);
+  Serial.begin(115200);  
   current_color = (rgb_color){0,0,255};
   Serial.println("Ready to receive colors."); 
 }
@@ -27,7 +33,13 @@ void setup()
 void loop()
 {
   // Update the colors.
-  uint16_t time = millis() ;
+  //uint16_t time = millis() ;
+  time = millis();
+  if((time - last_correct) > 60000)
+  {
+    current_color = (rgb_color){0,0,255};
+    Serial.println("Data too old");
+  }
   for(uint16_t i = 0; i < LED_COUNT; i++)
   {    
     byte slow = (time >> 5) - (i << 3);    
@@ -43,30 +55,45 @@ void loop()
   if (Serial.available()>=4)
   {
     byte header = Serial.read();
-    if(header!=32)
+    if(header != 32)
     {
       byte next = 0;
-      for (int reparse = 0; reparse < 3; reparse++) {
+      for (int reparse = 0; reparse < 4; reparse++) {
         next = Serial.peek();
-        if(next==32)
+        if(next == 32)
           {break;}
         else
           {Serial.read();}
       }
-      if(next==32)
+      if(next == 32)
          {Serial.println("Error- resynchronized");}
       else
          {Serial.println("Error- unable to resynchronize");}
     }
     else
     {
-      current_color.red=Serial.read();
-      current_color.green=Serial.read();
-      current_color.blue=Serial.read();
-      Serial.print("Recieved color:");
-      Serial.print(current_color.red,HEX);
-      Serial.print(current_color.green,HEX);
-      Serial.println(current_color.blue,HEX);
+      recieved_color.red = Serial.read();
+      recieved_color.green = Serial.read();
+      recieved_color.blue = Serial.read();
+      recieved_checksum = Serial.read();   
+      Serial.print("Recieved color:");     
+      Serial.print(recieved_color.red,HEX);
+      Serial.print(recieved_color.green,HEX);
+      Serial.print(recieved_color.blue,HEX); 
+      Serial.println(recieved_checksum,HEX);
+      calculated_checksum = recieved_color.red ^ recieved_color.green ^ recieved_color.blue;
+      if(calculated_checksum == recieved_checksum)
+      {
+        last_correct = millis();
+        current_color.red = recieved_color.red;
+        current_color.green = recieved_color.green;
+        current_color.blue = recieved_color.blue;
+      }
+      else
+      {
+        Serial.print("Recieved wrong checksum:"); 
+        Serial.print(calculated_checksum,HEX);
+      }
     }
   }  
 }
