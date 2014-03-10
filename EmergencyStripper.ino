@@ -1,10 +1,9 @@
-/* LedStripRainbow: Example Arduino sketch that shows
- * how to make a moving rainbow pattern on an
- * Addressable RGB LED Strip from Pololu.
+/* 
+ * Makes a moving color sweep on an
+ * Addressable RGB LED Strip
  *
  * To use this, you will need to plug an Addressable RGB LED
- * strip from Pololu into pin 12.  After uploading the sketch,
- * you should see a moving rainbow.
+ * strip into (DATA pin 12, and GND pin GND)
  */
  
 #include <PololuLedStrip.h>
