@@ -31,10 +31,10 @@ while true
     checksum = characters.each_byte.reduce{|o,n| o^n}
     puts "Recieving data for #{error_rate_dist_first['Timestamp']}, error rate #{error_rate}"
     puts "Sending data color #{characters.unpack('H*').first}, encoding #{characters.encoding}, checksum #{checksum}"
-    $sp.putc(32)
-    $sp.print(characters)
-    $sp.putc(checksum)
     begin
+      $sp.putc(32)
+      $sp.print(characters)
+      $sp.putc(checksum)
       puts "Arduino sez:"+$sp.read_nonblock(256)
     rescue IO::EAGAINWaitReadable => ex
       puts "Arduino no talky"

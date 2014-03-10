@@ -12,3 +12,8 @@ This is the arduino code and the ruby code to interface to stagger, in order to 
 - Arduino Uno
 - 5V, 2A power supply
 - http://www.coolcomponents.co.uk/digital-rgb-led-weatherproof-strip-60-led-1m-black.html
+
+## Run as:
+
+- bundle install
+- ruby emergency_stripper_interface.rb http://<http endpoint> /dev/tty.usbmodemfd131
