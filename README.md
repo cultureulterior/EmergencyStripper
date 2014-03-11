@@ -20,4 +20,4 @@ This repository contains arduino code and ruby code to interface to the stagger 
 
 ## Example:
 
-![Image](../blob/master/example.gif?raw=true)
+![Image](https://raw.github.com/cultureulterior/EmergencyStripper/master/example.gif)
