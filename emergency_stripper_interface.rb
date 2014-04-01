@@ -17,7 +17,7 @@ connect()
 while true
   if (
       (url = ARGV[0]) &&
-      (file = open(url)) &&
+      (file = open(url,{:read_timeout=>10})) &&
       (json = file.read) &&
       (data = JSON.parse(json)) &&
       (error_rate_dist = data["integration.message.production.error_rate"]) &&
