@@ -14,11 +14,26 @@ def connect()
   puts "Connecting to serial port"
 end
 connect()
+uri = URI(ARGV[0])
+conn = Net::HTTP.new(uri.host,uri.port)
+conn.read_timeout = 5
+conn.open_timeout = 5
+
+def unexcept(ex)
+    begin 
+      yield
+    rescue ex => res
+      $stderr.puts("Unexcepting #{res}")
+      nil
+    end
+end
+    
+
 while true
   if (
       (url = ARGV[0]) &&
-      (file = open(url,{:read_timeout=>10})) &&
-      (json = file.read) &&
+      (file = unexcept(Net::OpenTimeout){conn.get("/"+uri.path)}) &&
+      (json = file.body) &&
       (data = JSON.parse(json)) &&
       (error_rate_dist = data["integration.message.production.error_rate"]) &&
       (error_rate_dist_first = error_rate_dist.first) &&
