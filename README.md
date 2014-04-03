@@ -1,6 +1,6 @@
 ## EmergencyStripper
 
-This repository contains arduino code and ruby code to interface to the stagger http endpoint, in order to give ambient data about the environment
+Pulsing colors on led strip, going from red to green, depending on the state of the integration test. This currently uses the stagger http endpoint.
 
 ## Features
 
