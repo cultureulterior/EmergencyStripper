@@ -3,7 +3,7 @@
 
 require 'bundler/setup'
 require 'serialport'
-require 'open-uri'
+require 'net/http'
 require 'json'
 require 'color'
 
@@ -46,24 +46,27 @@ while true
     checksum = characters.each_byte.reduce{|o,n| o^n}
     puts "Recieving data for #{error_rate_dist_first['Timestamp']}, error rate #{error_rate}"
     puts "Sending data color #{characters.unpack('H*').first}, encoding #{characters.encoding}, checksum #{checksum}"
-    begin
-      $sp.putc(32)
-      $sp.print(characters)
-      $sp.putc(checksum)
-      puts "Arduino sez:"+$sp.read_nonblock(256)
-    rescue IO::EAGAINWaitReadable => ex
-      puts "Arduino no talky"
-    rescue EOFError,SystemCallError => ex
-      puts "End of file, trying to reconnect"
+    4.times do
       begin
-        $sp.close
-        connect()
-      rescue Exception => ex2
-        $stderr.puts "Exception when trying to reconnect #{ex2}"
+        $sp.putc(32)
+        $sp.print(characters)
+        $sp.putc(checksum)
+        puts "Arduino sez:"+$sp.read_nonblock(256)
+      rescue IO::EAGAINWaitReadable => ex
+        puts "Arduino no talky"
+      rescue EOFError,SystemCallError => ex
+        puts "End of file, trying to reconnect"
+        begin
+          $sp.close
+          connect()
+        rescue Exception => ex2
+          $stderr.puts "Exception when trying to reconnect #{ex2}"
+        end
       end
+      Kernel.sleep 1.0
     end
   else
     puts "ERROR IN HTTP RECIEVED DATA #{file} @@ #{json} @@ #{data} @@ #{error_rate_dist} @@ #{error_rate_object}"
   end
-  Kernel.sleep 5
+  Kernel.sleep 1.0
 end
