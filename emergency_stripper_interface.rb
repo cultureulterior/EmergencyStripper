@@ -19,10 +19,10 @@ conn = Net::HTTP.new(uri.host,uri.port)
 conn.read_timeout = 5
 conn.open_timeout = 5
 
-def unexcept(ex)
+def unexcept(*ex)
     begin 
       yield
-    rescue ex => res
+    rescue *ex => res
       $stderr.puts("Unexcepting #{res}")
       nil
     end
@@ -32,7 +32,7 @@ end
 while true
   if (
       (url = ARGV[0]) &&
-      (file = unexcept(Net::OpenTimeout){conn.get("/"+uri.path)}) &&
+      (file = unexcept(Net::OpenTimeout,SystemCallError){conn.get("/"+uri.path)}) &&
       (json = file.body) &&
       (data = JSON.parse(json)) &&
       (error_rate_dist = data["integration.message.production.error_rate"]) &&
