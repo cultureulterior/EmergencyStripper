@@ -5,19 +5,22 @@ require 'bundler/setup'
 require 'serialport'
 require 'net/http'
 require 'json'
+require 'yaml'
 require 'color'
 
+Config = YAML.load(IO.read("config.yaml"))
+p Config
 Green = Color::RGB.by_hex("00FF00").to_hsl
 Red = Color::RGB.by_hex("FF0000").to_hsl
 def connect()
-  $sp = SerialPort.new(ARGV[1], 115200, 8, 1, SerialPort::NONE)
+  $sp = SerialPort.new(Config["device"], 115200, 8, 1, SerialPort::NONE)
   puts "Connecting to serial port"
 end
 connect()
-uri = URI(ARGV[0])
+uri = URI(Config["source"])
 conn = Net::HTTP.new(uri.host,uri.port)
-conn.cert = OpenSSL::X509::Certificate.new(IO.read("stagger-client.crt"))
-conn.key = OpenSSL::PKey::RSA.new(IO.read("stagger-client.key"))
+conn.cert = OpenSSL::X509::Certificate.new(IO.read(Config["cert"]))
+conn.key = OpenSSL::PKey::RSA.new(IO.read(Config["key"]))
 conn.use_ssl = true
 conn.verify_mode = OpenSSL::SSL::VERIFY_NONE
 conn.read_timeout = 5
