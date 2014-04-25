@@ -16,6 +16,10 @@ end
 connect()
 uri = URI(ARGV[0])
 conn = Net::HTTP.new(uri.host,uri.port)
+conn.cert = OpenSSL::X509::Certificate.new(IO.read("stagger-client.crt"))
+conn.key = OpenSSL::PKey::RSA.new(IO.read("stagger-client.key"))
+conn.use_ssl = true
+conn.verify_mode = OpenSSL::SSL::VERIFY_NONE
 conn.read_timeout = 5
 conn.open_timeout = 5
 
@@ -32,19 +36,22 @@ end
 while true
   if (
       (url = ARGV[0]) &&
-      (file = unexcept(Net::OpenTimeout,SystemCallError){conn.get("/"+uri.path)}) &&
+      (file = unexcept(Net::OpenTimeout,SystemCallError){conn.get(uri.path)}) &&
       (json = file.body) &&
       (data = JSON.parse(json)) &&
-      (error_rate_dist = data["integration.message.production.error_rate"]) &&
-      (error_rate_dist_first = error_rate_dist.first) &&
-      (error_rate_object = error_rate_dist_first["Dist"])
+      (dists = data["Dists"]) &&
+      (error_rates = dists.select{|k,v| k[/integration.+error_rate/]}).length > 0
   )
-    error_rate = error_rate_object["Sum_x"]/error_rate_object["N"]
+    numeric_error_rates = error_rates
+    			.map{|k,v| [k,v["Sum_x"]/v["N"]]}
+			.to_h
+			.reject{|k,v| k[/staging/]}
+    error_rate = numeric_error_rates.values.max
     #error_rate = 0.5
     color = Green.mix_with(Red,error_rate).to_rgb.hex
     characters = [color].pack('H*').gsub(" ","!")
     checksum = characters.each_byte.reduce{|o,n| o^n}
-    puts "Recieving data for #{error_rate_dist_first['Timestamp']}, error rate #{error_rate}"
+    puts "Recieving data for #{data['Timestamp']}, error rates #{numeric_error_rates}"
     puts "Sending data color #{characters.unpack('H*').first}, encoding #{characters.encoding}, checksum #{checksum}"
     4.times do
       begin
@@ -66,7 +73,10 @@ while true
       Kernel.sleep 1.0
     end
   else
-    puts "ERROR IN HTTP RECIEVED DATA #{file} @@ #{json} @@ #{data} @@ #{error_rate_dist} @@ #{error_rate_object}"
+    #puts "ERROR IN HTTP RECIEVED DATA '#{file}' \n\n '#{json}' \n\n '#{data}' \n\n '#{error_rate_dist}' \n\n '#{error_rate_object}'"
+    #p file,json
+    #puts JSON.pretty_generate(data)	   
+    #p data["integration.message.production.error_rate"],error_rate_dist,error_rate_object
   end
   Kernel.sleep 1.0
 end
