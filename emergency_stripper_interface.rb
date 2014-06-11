@@ -7,20 +7,22 @@ require 'net/http'
 require 'json'
 require 'yaml'
 require 'color'
+require 'ostruct'
+require 'timeout'
 
-Config = YAML.load(IO.read("config.yaml"))
-p Config
+Config = OpenStruct.new(YAML.load(IO.read("config.yaml")))
+
 Green = Color::RGB.by_hex("00FF00").to_hsl
 Red = Color::RGB.by_hex("FF0000").to_hsl
 def connect()
-  $sp = SerialPort.new(Config["device"], 115200, 8, 1, SerialPort::NONE)
+  $sp = SerialPort.new(Config.device, 115200, 8, 1, SerialPort::NONE)
   puts "Connecting to serial port"
 end
 connect()
-uri = URI(Config["source"])
+uri = URI(Config.source)
 conn = Net::HTTP.new(uri.host,uri.port)
-conn.cert = OpenSSL::X509::Certificate.new(IO.read(Config["cert"]))
-conn.key = OpenSSL::PKey::RSA.new(IO.read(Config["key"]))
+conn.cert = OpenSSL::X509::Certificate.new(IO.read(Config.cert))
+conn.key = OpenSSL::PKey::RSA.new(IO.read(Config.key))
 conn.use_ssl = true
 conn.verify_mode = OpenSSL::SSL::VERIFY_NONE
 conn.read_timeout = 5
@@ -28,18 +30,20 @@ conn.open_timeout = 5
 
 def unexcept(*ex)
     begin 
-      yield
+      yield 
     rescue *ex => res
       $stderr.puts("Unexcepting #{res}")
       nil
     end
 end
-    
 
+#conn.set_debug_output $stderr
+    
+puts "entering system"
 while true
   if (
-      (url = ARGV[0]) &&
-      (file = unexcept(Net::OpenTimeout,SystemCallError){conn.get(uri.path)}) &&
+      (url = Config.source) &&
+      (file = unexcept(Timeout::Error,SystemCallError,SocketError){conn.get(uri.path)}) &&
       (json = file.body) &&
       (data = JSON.parse(json)) &&
       (dists = data["Dists"]) &&
@@ -76,7 +80,7 @@ while true
       Kernel.sleep 1.0
     end
   else
-    #puts "ERROR IN HTTP RECIEVED DATA '#{file}' \n\n '#{json}' \n\n '#{data}' \n\n '#{error_rate_dist}' \n\n '#{error_rate_object}'"
+    puts "ERROR IN HTTP RECIEVED DATA '#{file}' \n\n '#{json}' \n\n '#{data}' \n\n '#{error_rates}'"
     #p file,json
     #puts JSON.pretty_generate(data)	   
     #p data["integration.message.production.error_rate"],error_rate_dist,error_rate_object
