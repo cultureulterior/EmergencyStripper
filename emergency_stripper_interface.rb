@@ -45,7 +45,7 @@ while true
       (url = Config.source) &&
       (file = unexcept(Timeout::Error,SystemCallError,SocketError){conn.get(uri.path)}) &&
       (json = file.body) &&
-      (data = JSON.parse(json)) &&
+      (data = unexcept(JSON::ParserError){JSON.parse(json)}) &&
       (dists = data["Dists"]) &&
       (error_rates = dists.select{|k,v| k[/integration.+error_rate/]}).length > 0
   )
